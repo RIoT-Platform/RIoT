@@ -1,3 +1,16 @@
+/**
+ * @file sdTypes.go
+ * @brief Mapování typů zdrojů dat z doménového modelu do databázového modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování typů zdrojů dat a jejich parametrů.
+ * - Vojtěch Hubáček: doplnění mapování labelů a rolí parametrů field/tag.
+ *
+ * @ingroup riot_backend_core
+ */
 package dll2db
 
 import (
@@ -8,13 +21,16 @@ import (
 
 func ToDBModelEntitySDType(sdType dllModel.SDType) dbModel.SDTypeEntity {
 	return dbModel.SDTypeEntity{
-		ID:         sdType.ID.GetPayloadOrDefault(0),
-		Denotation: sdType.Denotation,
+		ID:    sdType.ID.GetPayloadOrDefault(0),
+		Label: sdType.Label,
+		UID:   sdType.UID,
 		Parameters: sharedUtils.Map(sdType.Parameters, func(sdParameter dllModel.SDParameter) dbModel.SDParameterEntity {
 			return dbModel.SDParameterEntity{
 				ID:         sdParameter.ID.GetPayloadOrDefault(0),
+				Label:      sdParameter.Label,
 				Denotation: sdParameter.Denotation,
 				Type:       string(sdParameter.Type),
+				Role:       string(sdParameter.Role),
 			}
 		}),
 	}

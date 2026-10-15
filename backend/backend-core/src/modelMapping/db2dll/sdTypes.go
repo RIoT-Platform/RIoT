@@ -1,7 +1,19 @@
+/**
+ * @file sdTypes.go
+ * @brief Mapování typů zdrojů dat z databázového modelu do doménového modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování typů zdrojů dat a jejich parametrů.
+ * - Vojtěch Hubáček: doplnění mapování labelů, rolí parametrů field/tag a zjednodušení převodu string enumů přetypováním na doménové typy.
+ *
+ * @ingroup riot_backend_core
+ */
 package db2dll
 
 import (
-	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -9,23 +21,16 @@ import (
 
 func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {
 	return dllModel.SDType{
-		ID:         sharedUtils.NewOptionalOf[uint32](sdTypeEntity.ID),
-		Denotation: sdTypeEntity.Denotation,
+		ID:    sharedUtils.NewOptionalOf[uint32](sdTypeEntity.ID),
+		UID:   sdTypeEntity.UID,
+		Label: sdTypeEntity.Label,
 		Parameters: sharedUtils.Map(sdTypeEntity.Parameters, func(sdParameterEntity dbModel.SDParameterEntity) dllModel.SDParameter {
 			return dllModel.SDParameter{
 				ID:         sharedUtils.NewOptionalOf[uint32](sdParameterEntity.ID),
+				Label:      sdParameterEntity.Label,
 				Denotation: sdParameterEntity.Denotation,
-				Type: func(sdParameterType string) dllModel.SDParameterType {
-					switch sdParameterType {
-					case "string":
-						return dllModel.SDParameterTypeString
-					case "number":
-						return dllModel.SDParameterTypeNumber
-					case "boolean":
-						return dllModel.SDParameterTypeTypeBoolean
-					}
-					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
-				}(sdParameterEntity.Type),
+				Type:       dllModel.SDParameterType(sdParameterEntity.Type),
+				Role:       dllModel.SDParameterRole(sdParameterEntity.Role),
 			}
 		}),
 	}

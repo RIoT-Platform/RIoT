@@ -1,17 +1,31 @@
+/**
+ * @file sdTypes_test.go
+ * @brief Test mapování typů zdrojů dat z databázového modelu do doménového modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní test mapování typů zdrojů dat.
+ * - Vojtěch Hubáček: úprava testovaných očekávání pro labely a parametry typů zdrojů.
+ *
+ * @ingroup riot_backend_core
+ */
 package db2dll
 
 import (
+	"testing"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/google/go-cmp/cmp"
-	"testing"
 )
 
 func TestToDLLModelSDType(t *testing.T) {
 	sdTypeEntity := dbModel.SDTypeEntity{
-		ID:         1,
-		Denotation: "shelly1pro",
+		ID:  1,
+		UID: "shelly1pro",
 		Parameters: sharedUtils.SliceOf(dbModel.SDParameterEntity{
 			ID:         1,
 			SDTypeID:   1,
@@ -25,8 +39,8 @@ func TestToDLLModelSDType(t *testing.T) {
 		}),
 	}
 	expected := dllModel.SDType{
-		ID:         sharedUtils.NewOptionalOf[uint32](1),
-		Denotation: "shelly1pro",
+		ID:  sharedUtils.NewOptionalOf[uint32](1),
+		UID: "shelly1pro",
 		Parameters: sharedUtils.SliceOf(dllModel.SDParameter{
 			ID:         sharedUtils.NewOptionalOf[uint32](1),
 			Denotation: "relay_0_temperature",

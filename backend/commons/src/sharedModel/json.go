@@ -1,11 +1,25 @@
+/**
+ * @file json.go
+ * @brief Serializace a deserializace vybraných sdílených modelů do JSON reprezentace.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní serializace a deserializace modelů KPI definic.
+ * - Vojtěch Hubáček: rozšíření JSON serializace a deserializace o nově přidané KPI operace.
+ *
+ * @ingroup riot_commons
+ */
 package sharedModel
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"reflect"
 	"strings"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
 func marshalKPINode(kpiNode KPINode) ([]byte, error) {
@@ -24,11 +38,39 @@ func (s *StringEQAtomKPINode) MarshalJSON() ([]byte, error) {
 	return marshalKPINode(s)
 }
 
+func (n *StringNEQAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *StringExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *StringNotExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
 func (b *BooleanEQAtomKPINode) MarshalJSON() ([]byte, error) {
 	return marshalKPINode(b)
 }
 
+func (n *BooleanNEQAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *BooleanExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *BooleanNotExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
 func (n *NumericEQAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *NumericNEQAtomKPINode) MarshalJSON() ([]byte, error) {
 	return marshalKPINode(n)
 }
 
@@ -48,6 +90,14 @@ func (n *NumericLEQAtomKPINode) MarshalJSON() ([]byte, error) {
 	return marshalKPINode(n)
 }
 
+func (n *NumericExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
+func (n *NumericNotExistsAtomKPINode) MarshalJSON() ([]byte, error) {
+	return marshalKPINode(n)
+}
+
 func (l *LogicalOperationKPINode) MarshalJSON() ([]byte, error) {
 	return marshalKPINode(l)
 }
@@ -56,10 +106,24 @@ func getKPINode(kpiNodeType KPINodeType) KPINode {
 	switch kpiNodeType {
 	case StringEQAtom:
 		return new(StringEQAtomKPINode)
+	case StringNEQAtom:
+		return new(StringNEQAtomKPINode)
+	case StringExistsAtom:
+		return new(StringExistsAtomKPINode)
+	case StringNotExistsAtom:
+		return new(StringNotExistsAtomKPINode)
 	case BooleanEQAtom:
 		return new(BooleanEQAtomKPINode)
+	case BooleanNEQAtom:
+		return new(BooleanNEQAtomKPINode)
+	case BooleanExistsAtom:
+		return new(BooleanExistsAtomKPINode)
+	case BooleanNotExistsAtom:
+		return new(BooleanNotExistsAtomKPINode)
 	case NumericEQAtom:
 		return new(NumericEQAtomKPINode)
+	case NumericNEQAtom:
+		return new(NumericNEQAtomKPINode)
 	case NumericGTAtom:
 		return new(NumericGTAtomKPINode)
 	case NumericGEQAtom:
@@ -68,6 +132,10 @@ func getKPINode(kpiNodeType KPINodeType) KPINode {
 		return new(NumericLTAtomKPINode)
 	case NumericLEQAtom:
 		return new(NumericLEQAtomKPINode)
+	case NumericExistsAtom:
+		return new(NumericExistsAtomKPINode)
+	case NumericNotExistsAtom:
+		return new(NumericNotExistsAtomKPINode)
 	case LogicalOperation:
 		return new(LogicalOperationKPINode)
 	}
@@ -107,13 +175,13 @@ func (l *LogicalOperationKPINode) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (k *KPIDefinition) UnmarshalJSON(data []byte) error {
-	type KPIDefinitionTA KPIDefinition
+func (k *KPIDefinitionMPU) UnmarshalJSON(data []byte) error {
+	type KPIDefinitionMPUTA KPIDefinitionMPU
 	aux := &struct {
 		RootNode json.RawMessage `json:"rootNode"`
-		*KPIDefinitionTA
+		*KPIDefinitionMPUTA
 	}{
-		KPIDefinitionTA: (*KPIDefinitionTA)(k),
+		KPIDefinitionMPUTA: (*KPIDefinitionMPUTA)(k),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
@@ -124,4 +192,36 @@ func (k *KPIDefinition) UnmarshalJSON(data []byte) error {
 	}
 	k.RootNode = rootKPINode
 	return nil
+}
+
+func (k KPIDefinition) MarshalJSON() ([]byte, error) {
+	type Alias KPIDefinition
+	rootNodeBytes, err := marshalKPINode(k.RootNode)
+	if err != nil {
+		return nil, err
+	}
+	aux := struct {
+		Alias
+		RootNode json.RawMessage `json:"rootNode"`
+	}{
+		Alias:    Alias(k),
+		RootNode: rootNodeBytes,
+	}
+	return json.Marshal(aux)
+}
+
+func (k KPIDefinitionMPU) MarshalJSON() ([]byte, error) {
+	type Alias KPIDefinitionMPU
+	rootNodeBytes, err := marshalKPINode(k.RootNode)
+	if err != nil {
+		return nil, err
+	}
+	aux := struct {
+		Alias
+		RootNode json.RawMessage `json:"rootNode"`
+	}{
+		Alias:    Alias(k),
+		RootNode: rootNodeBytes,
+	}
+	return json.Marshal(aux)
 }

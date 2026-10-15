@@ -1,3 +1,16 @@
+/**
+ * @file sdInstanceGroups.go
+ * @brief Mapování skupin instancí zdrojů dat z doménového modelu do databázového modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování skupin instancí zdrojů dat.
+ * - Vojtěch Hubáček: doplnění mapování labelů.
+ *
+ * @ingroup riot_backend_core
+ */
 package dll2db
 
 import (
@@ -10,6 +23,8 @@ func ToDBModelEntitySDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) db
 	sdInstanceGroupID := sdInstanceGroup.ID.GetPayloadOrDefault(0)
 	return dbModel.SDInstanceGroupEntity{
 		ID:             sdInstanceGroupID,
+		UID:            sdInstanceGroup.UID,
+		Label:          sdInstanceGroup.Label,
 		UserIdentifier: sdInstanceGroup.UserIdentifier,
 		GroupMembershipRecords: sharedUtils.Map[uint32, dbModel.SDInstanceGroupMembershipEntity](sdInstanceGroup.SDInstanceIDs, func(sdInstanceID uint32) dbModel.SDInstanceGroupMembershipEntity {
 			return dbModel.SDInstanceGroupMembershipEntity{

@@ -1,0 +1,69 @@
+/**
+ * @file kpiFulfillmentCheckResult.go
+ * @brief WebSocket handlery pro práci s výsledky vyhodnocení KPI.
+ *
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Vojtěch Hubáček: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
+package handlers
+
+import (
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/websocket/connection"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/auth"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+)
+
+func GetKPIResults(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	principal := AuthorizeOperation(c, msg, auth.ResourceKPIResults, auth.OperationRead)
+	if principal == nil {
+		return
+	}
+	result := domainLogicLayer.GetKPIFulfillmentCheckResults(principal.UserID)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+
+func GetKPIResultsByKPI(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	principal := AuthorizeOperation(c, msg, auth.ResourceKPIResults, auth.OperationRead)
+	if principal == nil {
+		return
+	}
+	uid, ok := parseUIDPayload(msg.Payload)
+	if !ok {
+		sendError(c, msg.ID, "invalid kpiDefinitionUID")
+		return
+	}
+	result := domainLogicLayer.GetKPIFulfillmentCheckResultsByKPIUID(principal.UserID, uid)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+
+func GetKPIResult(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	principal := AuthorizeOperation(c, msg, auth.ResourceKPIResults, auth.OperationRead)
+	if principal == nil {
+		return
+	}
+	input, err := parsePayload[graphQLModel.KPIFulfillmentCheckResultRequest](msg)
+	if err != nil {
+		sendError(c, msg.ID, "invalid payload")
+		return
+	}
+	result := domainLogicLayer.GetKPIFulfillmentCheckResult(principal.UserID, input)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}

@@ -1,3 +1,16 @@
+/**
+ * @file sdInstances.go
+ * @brief Mapování instancí zdrojů dat z doménového modelu do databázového modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování instancí zdrojů dat.
+ * - Vojtěch Hubáček: doplnění mapování labelů.
+ *
+ * @ingroup riot_backend_core
+ */
 package dll2db
 
 import (
@@ -9,6 +22,7 @@ func ToDBModelEntitySDInstance(sdInstance dllModel.SDInstance) dbModel.SDInstanc
 	return dbModel.SDInstanceEntity{
 		ID:              sdInstance.ID.GetPayloadOrDefault(0),
 		UID:             sdInstance.UID,
+		Label:           sdInstance.Label,
 		ConfirmedByUser: sdInstance.ConfirmedByUser,
 		UserIdentifier:  sdInstance.UserIdentifier,
 		SDTypeID:        sdInstance.SDType.ID.GetPayloadOrDefault(0),

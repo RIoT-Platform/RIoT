@@ -1,14 +1,26 @@
+/**
+ * @file client_test.go
+ * @brief Test vybraných operací relačního databázového klienta.
+ *
+ * @author Michal Bureš
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
 package dbClient
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"testing"
 )
 
 func setupStubDatabaseConnection(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *relationalDatabaseClientImpl) {
@@ -33,15 +45,15 @@ func TestPersistSDType(t *testing.T) {
 	}(db)
 	mock.ExpectBegin()
 	mock.ExpectQuery(`^INSERT INTO "sd_types"`).
-		WithArgs("shelly1pro").
+		WithArgs("sdt:shelly1pro", "shelly1pro").
 		WillReturnRows(sqlmock.NewRows(sharedUtils.SliceOf("id")).AddRow(1))
 	mock.ExpectQuery(`^INSERT INTO "sd_parameters"`).
-		WithArgs(1, "relay_0_temperature", "number", 1, "relay_0_output", "boolean").
+		WithArgs(1, "", "relay_0_temperature", "number", "", 1, "", "relay_0_output", "boolean", "").
 		WillReturnRows(sqlmock.NewRows(sharedUtils.SliceOf("id")).AddRow(1).AddRow(2))
 	mock.ExpectCommit()
 	sdType := dllModel.SDType{
-		ID:         sharedUtils.NewEmptyOptional[uint32](),
-		Denotation: "shelly1pro",
+		ID:  sharedUtils.NewEmptyOptional[uint32](),
+		UID: "shelly1pro",
 		Parameters: []dllModel.SDParameter{{
 			ID:         sharedUtils.NewEmptyOptional[uint32](),
 			Denotation: "relay_0_temperature",
@@ -49,7 +61,7 @@ func TestPersistSDType(t *testing.T) {
 		}, {
 			ID:         sharedUtils.NewEmptyOptional[uint32](),
 			Denotation: "relay_0_output",
-			Type:       dllModel.SDParameterTypeTypeBoolean,
+			Type:       dllModel.SDParameterTypeBoolean,
 		}},
 	}
 	if sdTypePersistResult := client.PersistSDType(sdType); sdTypePersistResult.IsFailure() {

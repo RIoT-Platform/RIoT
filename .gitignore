@@ -2,10 +2,7 @@
 .idea
 
 # Ignore most of the docker directory contents
-/docker/mongo-data
-/docker/mosquitto-data
-/docker/mosquitto-log
-/docker/postgres-data
+docker
 
 # Ignore some front-end directories
 frontend/dist/
@@ -14,3 +11,19 @@ frontend/node_modules
 
 # Ignore backend executables
 backend/bin
+
+debug.sh
+
+pg
+pg_backup
+
+backend/*preprocessor
+backend/*downloader
+
+.sync
+apps
+
+# Ignore local testing artifacts
+testing/.state/
+testing/outputs/
+testing/**/__pycache__/

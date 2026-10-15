@@ -1,0 +1,62 @@
+/**
+ * @file users.go
+ * @brief Mapování uživatelů z databázového modelu do doménového modelu.
+ *
+ * @author Michal Bureš
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
+package db2dll
+
+import (
+	"time"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+)
+
+func ToDLLModelUser(userEntity dbModel.UserEntity) dllModel.User {
+	return dllModel.User{
+		ID:                     sharedUtils.NewOptionalOf[uint](userEntity.Model.ID),
+		UID:                    userEntity.UID,
+		RoleID:                 uint32(userEntity.RoleID),
+		Username:               userEntity.Username,
+		Email:                  userEntity.Email,
+		Name:                   sharedUtils.NewOptionalFromPointer[string](userEntity.Name),
+		ProfileImageURL:        sharedUtils.NewOptionalFromPointer[string](userEntity.ProfileImageURL),
+		OAuth2Provider:         sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2Provider),
+		OAuth2ProviderIssuedID: sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2ProviderIssuedID),
+		LastLoginAt:            sharedUtils.NewOptionalFromPointer[time.Time](userEntity.LastLoginAt),
+		Disabled:               userEntity.Disabled,
+		DisabledAt:             sharedUtils.NewOptionalFromPointer[time.Time](userEntity.DisabledAt),
+		DisabledReason:         sharedUtils.NewOptionalFromPointer[string](userEntity.DisabledReason),
+		Sessions:               sharedUtils.Map(userEntity.Sessions, ToDLLModelUserSession),
+		// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
+	}
+}
+
+func ToDLLModelUserSession(userSessionEntity dbModel.UserSessionEntity) dllModel.UserSession {
+	return dllModel.UserSession{
+		ID:               sharedUtils.NewOptionalOf(userSessionEntity.ID),
+		UID:              userSessionEntity.UID,
+		UserID:           userSessionEntity.UserID,
+		RefreshTokenHash: userSessionEntity.RefreshTokenHash,
+		ExpiresAt:        userSessionEntity.ExpiresAt,
+		Revoked:          userSessionEntity.Revoked,
+		IPAddress:        userSessionEntity.IPAddress,
+		UserAgent:        userSessionEntity.UserAgent,
+		CreatedAt:        userSessionEntity.CreatedAt,
+		UpdatedAt:        userSessionEntity.UpdatedAt,
+	}
+}
+
+func ToDLLModelUserConfig(userConfig dbModel.UserConfigEntity) dllModel.UserConfig {
+	return dllModel.UserConfig{
+		UserID: userConfig.UserID,
+		Config: userConfig.Config,
+	}
+}

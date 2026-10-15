@@ -1,0 +1,35 @@
+# @file sdTypes.graphql
+# @brief GraphQL dotazy pro načítání sledovaných typů a jejich parametrů.
+#
+# @author Vojtěch Hubáček
+#
+# @par Autorský podíl
+# - Vojtěch Hubáček: návrh a implementace celé funkcionality souboru.
+#
+# @ingroup riot_frontend
+
+query SdTypes {
+  sdTypes {
+    uid
+    label
+    parameters {
+      label
+      denotation
+      type
+      role
+    }
+  }
+}
+
+query SdTypeByUID($uid: String!) {
+  sdType(uid: $uid) {
+    uid
+    label
+    parameters {
+      label
+      denotation
+      type
+      role
+    }
+  }
+}

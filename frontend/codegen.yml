@@ -1,0 +1,17 @@
+overwrite: true
+schema: "../backend/backend-core/src/api/graphql/schema.graphqls"
+documents: "src/**/*.{ts,tsx,graphql}"
+
+generates:
+  src/generated/:
+    preset: "client"
+    plugins: []
+    config:
+      enumsAsTypes: true
+      useTypeImports: true
+      skipTypename: false
+      avoidOptionals: false
+
+  ./graphql.schema.json:
+    plugins:
+      - introspection

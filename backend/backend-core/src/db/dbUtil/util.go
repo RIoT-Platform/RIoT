@@ -1,10 +1,22 @@
+/**
+ * @file util.go
+ * @brief Sdílené pomocné funkce pro skládání dotazů a obecnou práci s GORM entitami.
+ *
+ * @author Michal Bureš
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
 package dbUtil
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"gorm.io/gorm"
 	"log"
 	"reflect"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"gorm.io/gorm"
 )
 
 type WhereClause = sharedUtils.Pair[string, []any]
@@ -67,6 +79,14 @@ func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClause) sharedU
 		return sharedUtils.NewFailureResult[bool](err)
 	}
 	return sharedUtils.NewSuccessResult[bool](entityCount > 0)
+}
+
+func IsTableEmpty[T any](g *gorm.DB) sharedUtils.Result[bool] {
+	recordCount := int64(0)
+	if err := g.Model(new(T)).Count(&recordCount).Error; err != nil {
+		return sharedUtils.NewFailureResult[bool](err)
+	}
+	return sharedUtils.NewSuccessResult[bool](recordCount == 0)
 }
 
 func DoIDsExist[T any](g *gorm.DB, ids []uint32) sharedUtils.Result[bool] {

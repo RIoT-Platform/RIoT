@@ -1,7 +1,21 @@
+/**
+ * @file shortcuts.go
+ * @brief Zkrácené pomocné funkce pro konzumaci interních RabbitMQ zpráv.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní zkratky pro konzumaci základních interních zpráv.
+ * - Vojtěch Hubáček: doplnění consumeRawDataPointJSONMessages, consumeSDInstanceRegistrationRequestJSONMessages a úprava dalších konzumentů pro tuple zprávy.
+ *
+ * @ingroup riot_backend_core
+ */
 package isc
 
 import (
 	"fmt"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
@@ -14,9 +28,21 @@ func consumeMessageProcessingUnitConnectionNotificationJSONMessages(messageProce
 	sharedUtils.TerminateOnError(err, errorMessage)
 }
 
-func consumeSDInstanceRegistrationRequestJSONMessages(sdInstanceRegistrationRequestConsumerFunction func(sdInstanceRegistrationRequest sharedModel.SDInstanceRegistrationRequestISCMessage) error, rabbitMQClient rabbitmq.Client) {
-	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDInstanceRegistrationRequestISCMessage](rabbitMQClient, sharedConstants.SDInstanceRegistrationRequestsQueueName, sdInstanceRegistrationRequestConsumerFunction)
+func consumeSDTypeRegistrationRequestJSONMessages(sdTypeRegistrationRequestConsumerFunction func(sdTypeRegistrationRequests sharedModel.SDTypeRegistrationRequestTupleISCMessage) error, rabbitMQClient rabbitmq.Client) {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDTypeRegistrationRequestTupleISCMessage](rabbitMQClient, sharedConstants.SDTypeRegistrationRequestsQueueName, sdTypeRegistrationRequestConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.SDTypeRegistrationRequestsQueueName)
+	sharedUtils.TerminateOnError(err, errorMessage)
+}
+
+func consumeSDInstanceRegistrationRequestJSONMessages(sdInstanceRegistrationRequestConsumerFunction func(sdInstanceRegistrationRequests sharedModel.SDInstanceRegistrationRequestTupleISCMessage) error, rabbitMQClient rabbitmq.Client) {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDInstanceRegistrationRequestTupleISCMessage](rabbitMQClient, sharedConstants.SDInstanceRegistrationRequestsQueueName, sdInstanceRegistrationRequestConsumerFunction)
 	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.SDInstanceRegistrationRequestsQueueName)
+	sharedUtils.TerminateOnError(err, errorMessage)
+}
+
+func consumeRawDataPointJSONMessages(rawDataPointISCMessageConsumerFunction func(rawDataPointISCMessageTuple []sharedModel.RawDataPointISCMessage) error, rabbitMQClient rabbitmq.Client) {
+	err := rabbitmq.ConsumeJSONMessages[[]sharedModel.RawDataPointISCMessage](rabbitMQClient, sharedConstants.RawDataPointQueueName, rawDataPointISCMessageConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.RawDataPointQueueName)
 	sharedUtils.TerminateOnError(err, errorMessage)
 }
 

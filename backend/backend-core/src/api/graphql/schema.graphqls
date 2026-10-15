@@ -1,57 +1,88 @@
+# @file schema.graphqls
+# @brief GraphQL schéma Backend Core pro správu zdrojů dat, KPI, autorizace, API klíčů, raw dat a časové vrstvy.
+#
+# @author Michal Bureš
+# @author Vojtěch Hubáček
+#
+# @par Autorský podíl
+# - Michal Bureš: původní základ GraphQL schématu pro zdroje dat, KPI a uživatelskou konfiguraci.
+# - Vojtěch Hubáček: doplnění autorizace operací, API klíčů, IP restrikcí, raw dat, time-series API, rolí, tag/field parametrů, labelů, nových KPI operací, per-user a By dotazů a subscription onTimeSeriesExportUpdated a onRawDataPointArrived.
+#
+# @ingroup riot_backend_core
+
 # ----- SD types and instances -----
 
 enum SDParameterType {
-  STRING
-  NUMBER
-  BOOLEAN
+  string
+  number
+  boolean
+}
+
+enum SDParameterRole {
+  field
+  tag
 }
 
 type SDParameter {
-  id: ID!
+  label: String!
   denotation: String!
   type: SDParameterType!
+  role: SDParameterRole! 
 }
 
 type SDType {
-  id: ID!
-  denotation: String!
+  uid: String!
+  label: String!
   parameters: [SDParameter!]!
 }
 
 input SDParameterInput {
+  label: String!
   denotation: String!
   type: SDParameterType!
+  role: SDParameterRole!
 }
 
 input SDTypeInput {
-  denotation: String!
+  label: String!
+  uid: String!
   parameters: [SDParameterInput!]!
 }
 
 type SDInstance {
-  id: ID!
   uid: String!
+  label: String!
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
 }
 
 input SDInstanceUpdateInput {
+  label: String
   userIdentifier: String
   confirmedByUser: Boolean
+}
+
+# ----- Raw Data Point -----
+
+type RawDataPoint {
+  sdTypeUID: String!
+  sdInstanceUID: String!
+  payload: JSON!
+  eventTime: String!
 }
 
 # ----- KPI definitions and nodes -----
 
 enum SDInstanceMode {
-  ALL
-  SELECTED
+  all
+  selected
 }
 
 type KPIDefinition {
-  id: ID!
-  sdTypeID: ID!
-  sdTypeSpecification: String!
+  uid: String
+  label: String! 
+  sdTypeUID: String!
   userIdentifier: String!
   nodes: [KPINode!]!
   sdInstanceMode: SDInstanceMode!
@@ -65,9 +96,15 @@ interface KPINode {
 }
 
 enum LogicalOperationType {
-  AND
-  OR
-  NOR
+  and
+  or
+  nor
+  not
+}
+
+enum KPIReferenceMode {
+  literal
+  parameter
 }
 
 type LogicalOperationKPINode implements KPINode {
@@ -81,34 +118,115 @@ interface AtomKPINode implements KPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
 }
 
 type StringEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   stringReferenceValue: String!
+}
+
+type StringNEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+  stringReferenceValue: String!
+}
+
+type StringExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+}
+
+type StringNotExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
 }
 
 type BooleanEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   booleanReferenceValue: Boolean!
+}
+
+type BooleanNEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+  booleanReferenceValue: Boolean!
+}
+
+type BooleanExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+}
+
+type BooleanNotExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
 }
 
 type NumericEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+  numericReferenceValue: Float!
+}
+
+type NumericNEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   numericReferenceValue: Float!
 }
 
@@ -116,8 +234,10 @@ type NumericGTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   numericReferenceValue: Float!
 }
 
@@ -125,8 +245,10 @@ type NumericGEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   numericReferenceValue: Float!
 }
 
@@ -134,8 +256,10 @@ type NumericLTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   numericReferenceValue: Float!
 }
 
@@ -143,14 +267,37 @@ type NumericLEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
-  sdParameterID: ID!
   sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   numericReferenceValue: Float!
 }
 
+type NumericExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+}
+
+type NumericNotExistsAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  nodeType: KPINodeType!
+  sdParameterSpecification: String!
+  referenceMode: KPIReferenceMode!
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
+}
+
 input KPIDefinitionInput {
-  sdTypeID: ID!
-  sdTypeSpecification: String!
+  uid: String
+  label: String!
+  sdTypeUID: String!
   userIdentifier: String!
   nodes: [KPINodeInput!]!
   sdInstanceMode: SDInstanceMode!
@@ -159,12 +306,21 @@ input KPIDefinitionInput {
 
 enum KPINodeType {
   StringEQAtom,
+  StringNEQAtom,
+  StringExistsAtom,
+  StringNotExistsAtom,
   BooleanEQAtom,
+  BooleanNEQAtom,
+  BooleanExistsAtom,
+  BooleanNotExistsAtom,
   NumericEQAtom,
+  NumericNEQAtom,
   NumericGTAtom,
   NumericGEQAtom,
   NumericLTAtom,
   NumericLEQAtom,
+  NumericExistsAtom,
+  NumericNotExistsAtom,
   LogicalOperation
 }
 
@@ -172,65 +328,486 @@ input KPINodeInput {
   type: KPINodeType!
   id: ID!
   parentNodeID: ID
-  sdParameterID: ID
   sdParameterSpecification: String
   stringReferenceValue: String
   booleanReferenceValue: Boolean
   numericReferenceValue: Float
+  referenceMode: KPIReferenceMode
+  comparedSDParameterSpecification: String
+  comparedRecordOffset: Int
   logicalOperationType: LogicalOperationType
 }
 
 # ----- KPI fulfillment check results -----
 
 type KPIFulfillmentCheckResult {
-  kpiDefinitionID: ID!
-  sdInstanceID: ID!
+  sdTypeUID: String!
+  sdInstanceUID: String!
+  kpiDefinitionUID: String!
+  eventTime: String!
   fulfilled: Boolean!
 }
 
-type KPIFulfillmentCheckResultTuple {
-  kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
+input KPIFulfillmentCheckResultRequest {
+  kpiDefinitionUID: String!
+  sdInstanceUID: String!
 }
 
 # ----- SD instance groups -----
 
 type SDInstanceGroup {
-  id: ID!
+  uid: String!
+  label: String!
   userIdentifier: String!
-  sdInstanceIDs: [ID!]!
+  sdInstanceUIDs: [String!]!
 }
 
 input SDInstanceGroupInput {
+  uid: String!
+  label: String!
   userIdentifier: String!
-  sdInstanceIDs: [ID!]!
+  sdInstanceUIDs: [String!]!
+}
+
+# ----- Statistics
+
+scalar Date
+
+input SimpleSensors {
+  sensors: [String!]!
+}
+
+input SensorsWithFields {
+  sensors: [SensorField!]!
+}
+
+input SensorField {
+  key: String!
+  values: [String!]!
+}
+
+enum StatisticsOperation {
+  mean
+  min
+  max
+  first
+  sum
+  last
+  none
+  count
+  integral
+  median
+  mode
+  quantile
+  reduce
+  skew
+  spread
+  stddev
+  timeweightedavg
+}
+
+"""
+Data used for querying the selected bucket
+"""
+input StatisticsInput {
+  """
+  Start of the querying window
+  """
+  from: Date
+  """
+  End of the querying window
+  """
+  to: Date
+  """
+  Amount of minutes to aggregate by
+  For example if the queried range has 1 hour and aggregateMinutes is set to 10 the aggregation will result in 6 points
+  """
+  aggregateSeconds: Int
+  """
+  Timezone override default UTC.
+  For more details why and how this affects queries see: https://www.influxdata.com/blog/time-zones-in-flux/.
+  In most cases you can ignore this and some edge aggregations can be influenced.
+  If you need a precise result or the aggregation uses high amount of minutes provide the target time zone.
+  """
+  timezone: String
+  """
+  Aggregation operator to use, if needed
+  """
+  operation: StatisticsOperation
+}
+
+
+scalar JSON
+
+type OutputData {
+  time: Date!
+  deviceId: String!
+  deviceType: String
+  data: JSON!
+}
+
+input InputData {
+  time: Date!
+  deviceId: String!
+  deviceType: String
+  data: JSON!
+}
+
+
+# ----- Users and their configurations ----
+
+type UserConfig {
+  userUID: String!
+  config: JSON!
+}
+
+input UserConfigInput {
+  config: JSON!
+}
+
+type User {
+  uid: String!
+  username: String!
+  email: String!
+  name: String
+  profileImageURL: String
+  oauth2Provider: String
+  lastLoginAt: Date
+  disabled: Boolean!
+  disabledAt: Date
+  disabledReason: String
+  role: Role
+}
+
+type UserSession {
+  uid: String!
+  userUID: String!
+  expiresAt: Date!
+  revoked: Boolean!
+  ipAddress: String!
+  userAgent: String!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+input UserUpdateInput {
+  username: String
+  name: String
+  profileImageURL: String
+}
+
+type Role {
+  uid: String!
+  label: String!
+  system: Boolean!
+  permissions: [Permission!]
+}
+
+input RoleInput {
+  label: String!
+  permissionUIDs: [String!]!
+}
+
+type Permission {
+  uid: String!
+  label: String!
+}
+
+input AssignRoleInput {
+	userUID: String!
+	roleUID: String!
+}
+
+# ----- Subscription filters -----
+
+input SDInstanceRegisteredFilter {
+  sdTypeUIDs: [String!]
+  sdInstanceUIDs: [String!]
+}
+
+input RawDataPointArrivedFilter {
+  sdTypeUIDs: [String!]
+  sdInstanceUIDs: [String!]
+}
+
+input KPIFulfillmentCheckedFilter {
+  sdTypeUIDs: [String!]
+  kpiDefinitionUIDs: [String!]
+  sdInstanceUIDs: [String!]
+}
+
+input TimeSeriesExportFilter {
+  uids: [String!]
 }
 
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
-  sdType(id: ID!): SDType!
+  sdType(uid: String!): SDType!
   sdTypes: [SDType!]!
+  sdInstance(uid: String!): SDInstance!
   sdInstances: [SDInstance!]!
-  kpiDefinition(id: ID!): KPIDefinition!
+  sdInstancesByType(uid: String!): [SDInstance!]!
+  sdInstancesByKpiDefinition(uid: String!): [SDInstance!]!
+  kpiDefinition(uid: String!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
-  kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
-  sdInstanceGroup(id: ID!): SDInstanceGroup!
+  kpiDefinitionsBySdType(uid: String!): [KPIDefinition!]!
+  kpiDefinitionsBySdInstance(uid: String!): [KPIDefinition!]!
+  rawDataPointsBySDType(uid: String!): [RawDataPoint!]!
+  rawDataPoint(uid: String!): RawDataPoint!
+  kpiResults: [KPIFulfillmentCheckResult!]!
+  kpiResultsByKPI(uid: String!): [KPIFulfillmentCheckResult!]!
+  kpiResult(request: KPIFulfillmentCheckResultRequest!): KPIFulfillmentCheckResult!
+  sdInstanceGroup(uid: String!): SDInstanceGroup!
   sdInstanceGroups: [SDInstanceGroup!]!
+  statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
+  statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
+  userConfig: UserConfig!
+  users: [User!]!
+  user(uid: String!): User!
+  me: User!
+  sessions: [UserSession!]!
+  sessionsByUser(userUID: String!): [UserSession!]!
+  roles: [Role!]!
+  permissions: [Permission!]!
+  userRole(uid: String!): Role
+  role(uid: String): Role
+  apiKeys: [APIKey!]!
+  apiKeysByUser(userUID: String!): [APIKey!]!
+  apiKey(uid: String!): APIKey!
+  timeSeriesRead(request: TimeSeriesReadInput!): TimeSeriesReadResponse!
+  timeSeriesReadAggregateKPI(request: TimeSeriesReadAggregateKPIInput!): TimeSeriesReadResponse!
+  timeSeriesDistinctTagValues(request: TimeSeriesDistinctTagValuesInput!): TimeSeriesDistinctTagValuesResponse!
+  timeSeriesExport(uid: String!): TimeSeriesExport!
 }
 
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
-  deleteSDType(id: ID!): Boolean!
-  updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
+  deleteSDType(uid: String!): Boolean!
+  updateSDInstance(uid: String!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
-  updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
-  deleteKPIDefinition(id: ID!): Boolean!
+  updateKPIDefinition(uid: String!, input: KPIDefinitionInput!): KPIDefinition!
+  deleteKPIDefinition(uid: String!): Boolean!
   createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
-  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupInput!): SDInstanceGroup!
-  deleteSDInstanceGroup(id: ID!): Boolean!
+  updateSDInstanceGroup(uid: String!, input: SDInstanceGroupInput!): SDInstanceGroup!
+  deleteSDInstanceGroup(uid: String!): Boolean!
+  statisticsMutate(inputData: InputData!): Boolean!
+  updateUserConfig(input: UserConfigInput!): UserConfig!
+  deleteUserConfig: Boolean!
+  updateUser(uid: String!, input: UserUpdateInput!): User!
+  disableUser(uid: String!, reason: String): User!
+  enableUser(uid: String!): User!
+  revokeUserSessions(uid: String!): Boolean!
+  revokeSession(uid: String!): Boolean!
+  revokeAllSessionsForUser(userUID: String!): Boolean!
+  revokeOwnOtherSessions: Boolean!
+  createRole(input: RoleInput!): Role!
+  updateRole(uid: String!, input: RoleInput!): Role!
+  deleteRole(uid: String!): Boolean!
+  cloneRole(uid: String!, label: String!): Role!
+  updatePermissionLabel(uid: String!, label: String!): Permission!
+  assignRoleToUser(input: AssignRoleInput!): Boolean!
+  createAPIKey(input: APIKeyInput!): String!
+  updateAPIKey(uid: String!, input: APIKeyInput!): Boolean!
+  revokeAPIKey(uid: String!): APIKey!
+  rotateAPIKey(uid: String!): String!
+  updateAPIKeyPermissions(uid: String!, permissionUIDs: [String!]!): APIKey!
+  updateAPIKeyRestrictions(uid: String!, input: APIKeyRestrictionsInput!): APIKey!
+  deleteAPIKey(uid: String!): Boolean!
+  startTimeSeriesExport(input: TimeSeriesReadInput!): TimeSeriesExport!
+  startTimeSeriesExportAggregateKPI(input: TimeSeriesReadAggregateKPIInput!): TimeSeriesExport!
+  cancelTimeSeriesExport(uid: String!): TimeSeriesExport!
 }
 
 type Subscription {
-  onSDInstanceRegistered: SDInstance!
-  onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
+  onSDInstanceRegistered(filter: SDInstanceRegisteredFilter): SDInstance!
+  onRawDataPointArrived(filter: RawDataPointArrivedFilter): [RawDataPoint!]!
+  onKPIFulfillmentChecked(filter: KPIFulfillmentCheckedFilter): [KPIFulfillmentCheckResult!]!
+  onTimeSeriesExportUpdated(filter: TimeSeriesExportFilter!): TimeSeriesExport!
+}
+
+# ----- API Keys -----
+
+type APIKey {
+  uid: String!
+  label: String!
+  expiresAt: Date
+  revoked: Boolean!
+  rateLimit: ID
+  lastUsedAt: Date
+  permissions: [String!]!
+  ipRestrictions: [String!]!
+}
+
+input APIKeyInput {
+  label: String
+  expiresAt: Date
+  revoked: Boolean
+  rateLimit: ID
+  permissions: [String!]
+  ipRestrictions: [String!]
+}
+
+input APIKeyRestrictionsInput {
+  expiresAt: Date
+  revoked: Boolean
+  rateLimit: ID
+  ipRestrictions: [String!]
+}
+
+# ----- Time series data base -----
+
+enum TimeSeriesType {
+  raw
+  kpi
+}
+
+enum FilterNodeType {
+  logical
+  rule
+}
+
+enum LogicalOperator {
+  and
+  or
+  not
+}
+
+enum ParameterRole {
+  meta
+  time
+  tag
+  field
+}
+
+enum FilterOperator {
+  eq
+  neq
+  contains
+  in
+  prefix
+  suffix
+  regex
+}
+
+input FilterRuleInput {
+  tag: String!
+  operator: FilterOperator!
+  value: String!
+}
+
+input FilterNodeInput {
+  type: FilterNodeType!
+  operator: LogicalOperator
+  nodes: [FilterNodeInput!]
+  rule: FilterRuleInput
+}
+
+type TimeSeriesCursor {
+  time: Date!
+  sdInstanceUID: String!
+  kpiDefinitionUID: String
+}
+
+input TimeSeriesCursorInput {
+  time: Date!
+  sdInstanceUID: String!
+  kpiDefinitionUID: String
+}
+
+type TimeSeriesDataPoint {
+  time: Date!
+  tags: JSON!
+  data: JSON!
+}
+
+input TimeSeriesReadInput {
+  type: TimeSeriesType!
+
+  sdTypeUID: String
+  sdInstanceUIDs: [String!]
+  kpiDefinitionUIDs: [String!]
+
+  from: Date
+  to: Date
+
+  limit: Int
+  sortDesc: Boolean
+  batch: Int
+
+  filters: FilterNodeInput
+
+  cursor: TimeSeriesCursorInput
+}
+
+input TimeSeriesReadAggregateKPIInput {
+  sdTypeUID: String
+  sdInstanceUIDs: [String!]
+  kpiDefinitionUIDs: [String!]
+
+  from: Date
+  to: Date
+
+  aggregateSeconds: Int!
+
+  limit: Int
+  batch: Int
+  filters: FilterNodeInput
+
+  cursor: TimeSeriesCursorInput
+}
+
+input TimeSeriesDistinctTagValuesInput {
+  type: TimeSeriesType!
+
+  sdTypeUID: String
+  sdInstanceUIDs: [String!]
+  kpiDefinitionUIDs: [String!]
+
+  from: Date
+  to: Date
+
+  tag: String!
+  filters: FilterNodeInput
+}
+
+type TimeSeriesReadResponse {
+  parameters: [TimeSeriesParameter!]
+  base: JSON!
+  data: [TimeSeriesDataPoint!]
+  hasMoreBatches: Boolean!
+  hasMoreData: Boolean!
+  nextCursor: TimeSeriesCursor
+  error: String
+}
+
+type TimeSeriesDistinctTagValuesResponse {
+  values: [String!]!
+  error: String
+}
+
+type TimeSeriesParameter {
+  denotation: String!
+  label: String!
+  role: ParameterRole!
+}
+
+# ----- Time series data export -----
+
+enum ExportStatus {
+  pending
+  processing
+  done
+  failed
+  cancelled
+  expired
+}
+
+type TimeSeriesExport {
+  uid: String!
+  status: ExportStatus!
+  downloadUrl: String
+  createdAt: Date!
+  expiresAt: Date
+  error: String
 }

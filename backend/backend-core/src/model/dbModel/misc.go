@@ -1,7 +1,19 @@
+/**
+ * @file misc.go
+ * @brief Pomocné databázové operace nad modely KPI definic.
+ *
+ * @author Michal Bureš
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
 package dbModel
 
 import (
 	"fmt"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbUtil"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"gorm.io/gorm"

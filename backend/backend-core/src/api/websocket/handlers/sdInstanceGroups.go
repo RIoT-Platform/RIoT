@@ -1,0 +1,114 @@
+/**
+ * @file sdInstanceGroups.go
+ * @brief WebSocket handlery pro práci se skupinami instancí zdrojů dat.
+ *
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Vojtěch Hubáček: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_backend_core
+ */
+package handlers
+
+import (
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/websocket/connection"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/auth"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+)
+
+func GetSDInstanceGroups(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	if principal := AuthorizeOperation(c, msg, auth.ResourceSDInstances, auth.OperationRead); principal == nil {
+		return
+	}
+	result := domainLogicLayer.GetSDInstanceGroups()
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+func GetSDInstanceGroup(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	if principal := AuthorizeOperation(c, msg, auth.ResourceSDInstances, auth.OperationRead); principal == nil {
+		return
+	}
+	uid, ok := parseUIDPayload(msg.Payload)
+	if !ok {
+		sendError(c, msg.ID, "invalid uid")
+		return
+	}
+	result := domainLogicLayer.GetSDInstanceGroupByUID(uid)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+
+func CreateSDInstanceGroup(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	if principal := AuthorizeOperation(c, msg, auth.ResourceSDInstances, auth.OperationCreate); principal == nil {
+		return
+	}
+	input, err := parsePayload[graphQLModel.SDInstanceGroupInput](msg)
+	if err != nil {
+		sendError(c, msg.ID, "invalid payload")
+		return
+	}
+	result := domainLogicLayer.CreateSDInstanceGroup(input)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+
+func UpdateSDInstanceGroup(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	if principal := AuthorizeOperation(c, msg, auth.ResourceSDInstances, auth.OperationUpdate); principal == nil {
+		return
+	}
+	payload, ok := msg.Payload.(map[string]any)
+	if !ok {
+		sendError(c, msg.ID, "invalid payload")
+		return
+	}
+	uid, ok := parseUIDPayload(payload)
+	if !ok {
+		sendError(c, msg.ID, "invalid uid")
+		return
+	}
+	inputRaw, ok := payload["input"]
+	if !ok {
+		sendError(c, msg.ID, "missing input")
+		return
+	}
+	inputMsg := sharedModel.WebSocketMessage{Payload: inputRaw}
+	input, err := parsePayload[graphQLModel.SDInstanceGroupInput](inputMsg)
+	if err != nil {
+		sendError(c, msg.ID, "invalid input")
+		return
+	}
+	result := domainLogicLayer.UpdateSDInstanceGroup(uid, input)
+	if result.IsFailure() {
+		sendError(c, msg.ID, result.GetError().Error())
+		return
+	}
+	sendSuccess(c, msg.ID, result.GetPayload())
+}
+
+func DeleteSDInstanceGroup(c *connection.Client, msg sharedModel.WebSocketMessage) {
+	if principal := AuthorizeOperation(c, msg, auth.ResourceSDInstances, auth.OperationDelete); principal == nil {
+		return
+	}
+	uid, ok := parseUIDPayload(msg.Payload)
+	if !ok {
+		sendError(c, msg.ID, "invalid uid")
+		return
+	}
+	if err := domainLogicLayer.DeleteSDInstanceGroup(uid); err != nil {
+		sendError(c, msg.ID, err.Error())
+		return
+	}
+	sendSuccess(c, msg.ID, nil)
+}

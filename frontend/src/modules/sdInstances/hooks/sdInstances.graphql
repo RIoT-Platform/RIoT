@@ -1,0 +1,69 @@
+# @file sdInstances.graphql
+# @brief GraphQL dotazy a subscription pro sledované instance a raw datové body.
+#
+# @author Vojtěch Hubáček
+#
+# @par Autorský podíl
+# - Vojtěch Hubáček: návrh a implementace celé funkcionality souboru.
+#
+# @ingroup riot_frontend
+
+query SdInstances {
+  sdInstances {
+    uid
+    label
+  }
+}
+
+query SdInstancesByType($uid: String!) {
+  sdInstancesByType(uid: $uid) {
+    uid
+    label
+    type {
+      uid
+    }
+  }
+}
+
+query SdInstancesByKpiDefinition($uid: String!) {
+  sdInstancesByKpiDefinition(uid: $uid) {
+    uid
+    label
+  }
+}
+
+query RawDataPoint($uid: String!) {
+  rawDataPoint(uid: $uid) {
+    sdInstanceUID
+    payload
+    eventTime
+  }
+}
+
+subscription OnRawDataPointArrived($filter: RawDataPointArrivedFilter) {
+  onRawDataPointArrived(filter: $filter) {
+    sdTypeUID
+    sdInstanceUID
+    payload
+    eventTime
+  }
+}
+
+query SdInstance($uid: String!) {
+  sdInstance(uid: $uid) {
+    uid
+    label
+    confirmedByUser
+    userIdentifier
+    type {
+      uid
+      label
+      parameters {
+        label
+        denotation
+        type
+        role
+      }
+    }
+  }
+}

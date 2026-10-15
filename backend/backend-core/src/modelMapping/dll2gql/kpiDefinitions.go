@@ -1,12 +1,40 @@
+/**
+ * @file kpiDefinitions.go
+ * @brief Mapování doménové reprezentace KPI definic do GraphQL modelu.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování základních KPI operací.
+ * - Vojtěch Hubáček: rozšíření mapování o nově přidané KPI operace, labely KPI definic a zjednodušení převodu string enumů přetypováním na GraphQL typy.
+ *
+ * @ingroup riot_backend_core
+ */
 package dll2gql
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"strings"
 )
+
+func graphQLKPIReferenceMode(referenceMode sharedModel.KPIReferenceMode) graphQLModel.KPIReferenceMode {
+	if referenceMode == "" {
+		referenceMode = sharedModel.KPIReferenceModeLiteral
+	}
+	return graphQLModel.KPIReferenceMode(referenceMode)
+}
+
+func optionalStringPointer(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
+}
 
 func toGraphQLModelKPINode(kpiNode sharedModel.KPINode, id uint32, parentNodeID *uint32) graphQLModel.KPINode {
 	switch typedKPINode := kpiNode.(type) {
@@ -15,80 +43,185 @@ func toGraphQLModelKPINode(kpiNode sharedModel.KPINode, id uint32, parentNodeID 
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeStringEQAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			StringReferenceValue:     typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset: typedKPINode.ComparedRecordOffset,
+			StringReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.StringNEQAtomKPINode:
+		return graphQLModel.StringNEQAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeStringNEQAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset: typedKPINode.ComparedRecordOffset,
+			StringReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.StringExistsAtomKPINode:
+		return graphQLModel.StringExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeStringExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
+		}
+	case *sharedModel.StringNotExistsAtomKPINode:
+		return graphQLModel.StringNotExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeStringNotExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
 		}
 	case *sharedModel.BooleanEQAtomKPINode:
 		return graphQLModel.BooleanEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeBooleanEQAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			BooleanReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			BooleanReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.BooleanNEQAtomKPINode:
+		return graphQLModel.BooleanNEQAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeBooleanNEQAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			BooleanReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.BooleanExistsAtomKPINode:
+		return graphQLModel.BooleanExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeBooleanExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
+		}
+	case *sharedModel.BooleanNotExistsAtomKPINode:
+		return graphQLModel.BooleanNotExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeBooleanNotExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
 		}
 	case *sharedModel.NumericEQAtomKPINode:
 		return graphQLModel.NumericEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeNumericEQAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			NumericReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.NumericNEQAtomKPINode:
+		return graphQLModel.NumericNEQAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeNumericNEQAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
 		}
 	case *sharedModel.NumericLTAtomKPINode:
 		return graphQLModel.NumericLTAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeNumericLTAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			NumericReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
 		}
 	case *sharedModel.NumericLEQAtomKPINode:
 		return graphQLModel.NumericLEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeNumericLEQAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			NumericReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
 		}
 	case *sharedModel.NumericGTAtomKPINode:
 		return graphQLModel.NumericGTAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeNumericGTAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			NumericReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
 		}
 	case *sharedModel.NumericGEQAtomKPINode:
 		return graphQLModel.NumericGEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 graphQLModel.KPINodeTypeNumericGEQAtom,
-			SdParameterID:            typedKPINode.SDParameterID,
 			SdParameterSpecification: typedKPINode.SDParameterSpecification,
-			NumericReferenceValue:    typedKPINode.ReferenceValue,
+			ReferenceMode:            graphQLKPIReferenceMode(typedKPINode.ReferenceMode),
+			ComparedSDParameterSpecification: optionalStringPointer(
+				typedKPINode.ComparedSDParameterSpecification,
+			),
+			ComparedRecordOffset:  typedKPINode.ComparedRecordOffset,
+			NumericReferenceValue: typedKPINode.ReferenceValue,
+		}
+	case *sharedModel.NumericExistsAtomKPINode:
+		return graphQLModel.NumericExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeNumericExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
+		}
+	case *sharedModel.NumericNotExistsAtomKPINode:
+		return graphQLModel.NumericNotExistsAtomKPINode{
+			ID:                       id,
+			ParentNodeID:             parentNodeID,
+			NodeType:                 graphQLModel.KPINodeTypeNumericNotExistsAtom,
+			SdParameterSpecification: typedKPINode.SDParameterSpecification,
+			ReferenceMode:            graphQLModel.KPIReferenceModeLiteral,
 		}
 	case *sharedModel.LogicalOperationKPINode:
 		return graphQLModel.LogicalOperationKPINode{
 			ID:           id,
 			ParentNodeID: parentNodeID,
 			NodeType:     graphQLModel.KPINodeTypeLogicalOperation,
-			Type: func(logicalOperationNodeType sharedModel.LogicalOperationNodeType) graphQLModel.LogicalOperationType {
-				switch logicalOperationNodeType {
-				case sharedModel.AND:
-					return graphQLModel.LogicalOperationTypeAnd
-				case sharedModel.OR:
-					return graphQLModel.LogicalOperationTypeOr
-				case sharedModel.NOR:
-					return graphQLModel.LogicalOperationTypeNor
-				}
-				panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
-			}(typedKPINode.Type),
+			Type:         graphQLModel.LogicalOperationType(typedKPINode.Type),
 		}
 	}
 	panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
@@ -109,9 +242,9 @@ func processKPINode(node sharedModel.KPINode, generateNextNumber func() uint32, 
 func ToGraphQLModelKPIDefinition(kpiDefinition sharedModel.KPIDefinition) graphQLModel.KPIDefinition {
 	nodes := processKPINode(kpiDefinition.RootNode, sharedUtils.SequentialNumberGenerator(), nil)
 	return graphQLModel.KPIDefinition{
-		ID:                     sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
-		SdTypeID:               kpiDefinition.SDTypeID,
-		SdTypeSpecification:    kpiDefinition.SDTypeSpecification,
+		UID:                    kpiDefinition.UID,
+		Label:                  kpiDefinition.Label,
+		SdTypeUID:              kpiDefinition.SDTypeSpecification,
 		UserIdentifier:         kpiDefinition.UserIdentifier,
 		Nodes:                  nodes,
 		SdInstanceMode:         graphQLModel.SDInstanceMode(strings.ToUpper(string(kpiDefinition.SDInstanceMode))),

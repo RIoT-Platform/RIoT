@@ -1,11 +1,49 @@
+/**
+ * @file sharedConstants.go
+ * @brief Sdílené konstanty pro názvy RabbitMQ front, exchanges a dalších systémových identifikátorů.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní sada sdílených konstant platformy RIoT.
+ * - Vojtěch Hubáček: doplnění konstant pro time-series tok, registraci instancí, bootstrap cache a další fronty navazující na historizaci dat.
+ *
+ * @ingroup riot_commons
+ */
 package sharedConstants
 
 const (
 	BuiltInFanoutExchangeName                             = "amq.fanout"
+	IngestExchangeName                                    = "ingest"
+	IngestQueueNamePrefix                                 = "ingest."
 	MessageProcessingUnitConnectionNotificationsQueueName = "message-processing-unit-connection-notifications"
+	RawDataPointCacheBootstrapQueueName                   = "raw-data-point-cache-bootstrap"
+	KPIFulfillmentCacheBootstrapQueueName                 = "kpi-fulfillment-cache-bootstrap"
 	KPIFulfillmentCheckRequestsQueueName                  = "kpi-fulfillment-check-requests"
 	KPIFulfillmentCheckResultsQueueName                   = "kpi-fulfillment-check-results"
+	RawDataPointQueueName                                 = "raw-data-point"
+	SDTypeRegistrationRequestsQueueName                   = "sd-type-registration-requests"
 	SDInstanceRegistrationRequestsQueueName               = "sd-instance-registration-requests"
 	SetOfSDInstancesUpdatesQueueName                      = "set-of-sd-instances-updates"
 	SetOfSDTypesUpdatesQueueName                          = "set-of-sd-types-updates"
+	TimeSeriesRawDataQueueName                            = "time-series-raw-data"
+	TimeSeriesKPIResultQueueName                          = "time-series-kpi-results"
+	TimeSeriesReadRequestQueueName                        = "time-series-read-request"
+	TimeSeriesReadCancelRequestQueueName                  = "time-series-read-cancel-request"
+	TimeSeriesReadResponseQueueName                       = "time-series-read-response"
+	TimeSeriesDistinctTagValuesRequestQueueName           = "time-series-distinct-tag-values-request"
+	TimeSeriesDistinctTagValuesResponseQueueName          = "time-series-distinct-tag-values-response"
+	TimeSeriesReprocessReadRequestQueueName               = "time-series-reprocess-read-request"
+	TimeSeriesReprocessReadResponseQueueName              = "time-series-reprocess-read-response"
+	TimeSeriesRecordNeighborhoodRequestQueueName          = "time-series-record-neighborhood-request"
+	TimeSeriesLateRecordCorrectionQueueName               = "time-series-late-record-correction"
+	KPIReprocessRequestQueueName                          = "kpi-reprocess-requests"
+	TSDBDeleteQueueName                                   = "time-series-delete-requests-tsdb"
+	MPUDeleteQueueName                                    = "time-series-delete-requests-mpu"
+	KPIConfigUpdateQueueName                              = "kpi-config-update"
 )
+
+func IngestQueueName(sdTypeUID string) string {
+	return IngestQueueNamePrefix + sdTypeUID
+}

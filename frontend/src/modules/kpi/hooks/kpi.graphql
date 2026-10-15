@@ -1,0 +1,172 @@
+# @file kpi.graphql
+# @brief GraphQL operace a subscription pro KPI definice a jejich výsledky.
+#
+# @author Vojtěch Hubáček
+#
+# @par Autorský podíl
+# - Vojtěch Hubáček: návrh a implementace celé funkcionality souboru.
+#
+# @ingroup riot_frontend
+
+query KpiDefinitions {
+  kpiDefinitions {
+    uid
+    label
+    sdTypeUID
+    sdInstanceMode
+  }
+}
+
+query KpiDefinitionsBySdType($uid: String!) {
+  kpiDefinitionsBySdType(uid: $uid) {
+    uid
+    label
+    sdTypeUID
+    sdInstanceMode
+  }
+}
+
+mutation CreateKpiDefinition($input: KPIDefinitionInput!) {
+  createKPIDefinition(input: $input) {
+    uid
+    label
+  }
+}
+
+mutation UpdateKpiDefinition($uid: String!, $input: KPIDefinitionInput!) {
+  updateKPIDefinition(uid: $uid, input: $input) {
+    uid
+    label
+  }
+}
+
+query KpiResult($request: KPIFulfillmentCheckResultRequest!) {
+  kpiResult(request: $request) {
+    eventTime
+    fulfilled
+  }
+}
+
+subscription OnKPIFulfillmentChecked($filter: KPIFulfillmentCheckedFilter) {
+  onKPIFulfillmentChecked(filter: $filter) {
+    sdTypeUID
+    sdInstanceUID
+    kpiDefinitionUID
+    eventTime
+    fulfilled
+  }
+}
+
+query KpiDefinitionsBySdInstance($uid: String!) {
+  kpiDefinitionsBySdInstance(uid: $uid) {
+    uid
+    label
+    sdTypeUID
+    sdInstanceMode
+  }
+}
+
+mutation DeleteKpiDefinition($uid: String!) {
+  deleteKPIDefinition(uid: $uid)
+}
+
+query KpiDefinition($uid: String!) {
+  kpiDefinition(uid: $uid) {
+    uid
+    label
+    sdTypeUID
+    userIdentifier
+    sdInstanceMode
+    selectedSDInstanceUIDs
+    nodes {
+      id
+      parentNodeID
+      nodeType
+
+      ... on LogicalOperationKPINode {
+        type
+      }
+
+      ... on AtomKPINode {
+        sdParameterSpecification
+        referenceMode
+        comparedSDParameterSpecification
+        comparedRecordOffset
+      }
+
+      ... on StringEQAtomKPINode {
+        sdParameterSpecification
+        stringReferenceValue
+      }
+
+      ... on StringNEQAtomKPINode {
+        sdParameterSpecification
+        stringReferenceValue
+      }
+
+      ... on StringExistsAtomKPINode {
+        sdParameterSpecification
+      }
+
+      ... on StringNotExistsAtomKPINode {
+        sdParameterSpecification
+      }
+
+      ... on BooleanEQAtomKPINode {
+        sdParameterSpecification
+        booleanReferenceValue
+      }
+
+      ... on BooleanNEQAtomKPINode {
+        sdParameterSpecification
+        booleanReferenceValue
+      }
+
+      ... on BooleanExistsAtomKPINode {
+        sdParameterSpecification
+      }
+
+      ... on BooleanNotExistsAtomKPINode {
+        sdParameterSpecification
+      }
+
+      ... on NumericEQAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericNEQAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericGTAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericGEQAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericLTAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericLEQAtomKPINode {
+        sdParameterSpecification
+        numericReferenceValue
+      }
+
+      ... on NumericExistsAtomKPINode {
+        sdParameterSpecification
+      }
+
+      ... on NumericNotExistsAtomKPINode {
+        sdParameterSpecification
+      }
+    }
+  }
+}

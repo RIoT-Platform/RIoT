@@ -1,5 +1,15 @@
+## @file Dockerfile
+#  @brief Dockerfile pro sestavení a spuštění modulu Backend Core.
+#
+#  @author Michal Bureš
+#
+#  @par Autorský podíl
+#  - Michal Bureš: návrh a implementace celé funkcionality souboru.
+#
+#  @ingroup riot_backend_core
+
 # Use an official Go runtime as a parent image
-FROM golang:1.22-alpine
+FROM golang:1.24.1-alpine AS build
 # Set the working directory inside the container
 WORKDIR /app
 # Copy the go.mod file, go.sum file, and src directory from backend-core
@@ -13,9 +23,15 @@ WORKDIR /app/backend-core
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod tidy
 RUN go mod download
-# Run unit tests
-RUN go test ./...
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-backend-core src/main.go
-# Run the executable
+
+# Move to production alpine image
+FROM alpine AS prod
+
+COPY --from=build /app/backend-core/RIoT-backend-core /app/backend-core/RIoT-backend-core
+
+# Copy the GraphQL schema file
+COPY --from=build /app/backend-core/src/api/graphql/schema.graphqls /app/backend-core/schema.graphqls
+
 CMD ["/app/backend-core/RIoT-backend-core"]

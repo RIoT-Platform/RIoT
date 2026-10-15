@@ -1,3 +1,14 @@
+/**
+ * @file optional.go
+ * @brief Generický typ pro práci s volitelnou hodnotou.
+ *
+ * @author Michal Bureš
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: návrh a implementace celé funkcionality souboru.
+ *
+ * @ingroup riot_commons
+ */
 package sharedUtils
 
 type Optional[T any] struct {
@@ -52,6 +63,14 @@ func (o Optional[T]) GetPayloadOrDefault(def T) T {
 		return o.GetPayload()
 	}
 	return def
+}
+
+func (o Optional[T]) ToPointer() *T {
+	if o.IsPresent() {
+		return &o.payload
+	} else {
+		return nil
+	}
 }
 
 func OptionalComparer[T comparable](x Optional[T], y Optional[T]) bool {

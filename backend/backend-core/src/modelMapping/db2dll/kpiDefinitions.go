@@ -1,11 +1,40 @@
+/**
+ * @file kpiDefinitions.go
+ * @brief Mapování databázové reprezentace KPI definic do doménového stromu KPI podmínek.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní mapování základních KPI operací.
+ * - Vojtěch Hubáček: rozšíření mapování o nově přidané KPI operace a labely KPI definic.
+ *
+ * @ingroup riot_backend_core
+ */
 package db2dll
 
 import (
 	"fmt"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
+
+func referenceModeFromAtomEntity(atomKPINodeEntity dbModel.AtomKPINodeEntity) sharedModel.KPIReferenceMode {
+	referenceMode := sharedModel.KPIReferenceMode(atomKPINodeEntity.ReferenceMode)
+	if referenceMode == "" {
+		referenceMode = sharedModel.KPIReferenceModeLiteral
+	}
+	return referenceMode
+}
+
+func comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity dbModel.AtomKPINodeEntity) string {
+	if atomKPINodeEntity.ComparedSDParameter != nil {
+		return atomKPINodeEntity.ComparedSDParameter.Denotation
+	}
+	return ""
+}
 
 func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) sharedModel.KPINode {
 	logicalOperationKPINodeEntityOptional := sharedUtils.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity dbModel.LogicalOperationKPINodeEntity) bool {
@@ -28,50 +57,111 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 	})
 	if atomKPINodeEntityOptional.IsPresent() {
 		atomKPINodeEntity := atomKPINodeEntityOptional.GetPayload()
-		sdParameterID := atomKPINodeEntity.SDParameter.ID
 		sdParameterDenotation := atomKPINodeEntity.SDParameter.Denotation
 		switch atomKPINodeEntity.Type {
 		case "string_eq":
 			return &sharedModel.StringEQAtomKPINode{
-				SDParameterID:            sdParameterID,
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.StringReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "string_neq":
+			return &sharedModel.StringNEQAtomKPINode{
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.StringReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "string_exists":
+			return &sharedModel.StringExistsAtomKPINode{
 				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.StringReferenceValue).GetPayload(),
+			}
+		case "string_not_exists":
+			return &sharedModel.StringNotExistsAtomKPINode{
+				SDParameterSpecification: sdParameterDenotation,
 			}
 		case "boolean_eq":
 			return &sharedModel.BooleanEQAtomKPINode{
-				SDParameterID:            sdParameterID,
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.BooleanReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "boolean_neq":
+			return &sharedModel.BooleanNEQAtomKPINode{
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.BooleanReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "boolean_exists":
+			return &sharedModel.BooleanExistsAtomKPINode{
 				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.BooleanReferenceValue).GetPayload(),
+			}
+		case "boolean_not_exists":
+			return &sharedModel.BooleanNotExistsAtomKPINode{
+				SDParameterSpecification: sdParameterDenotation,
 			}
 		case "numeric_eq":
 			return &sharedModel.NumericEQAtomKPINode{
-				SDParameterID:            sdParameterID,
-				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "numeric_neq":
+			return &sharedModel.NumericNEQAtomKPINode{
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
 			}
 		case "numeric_lt":
 			return &sharedModel.NumericLTAtomKPINode{
-				SDParameterID:            sdParameterID,
-				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
 			}
 		case "numeric_leq":
 			return &sharedModel.NumericLEQAtomKPINode{
-				SDParameterID:            sdParameterID,
-				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
 			}
 		case "numeric_gt":
 			return &sharedModel.NumericGTAtomKPINode{
-				SDParameterID:            sdParameterID,
-				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
 			}
 		case "numeric_geq":
 			return &sharedModel.NumericGEQAtomKPINode{
-				SDParameterID:            sdParameterID,
+				SDParameterSpecification:         sdParameterDenotation,
+				ReferenceValue:                   sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+				ReferenceMode:                    referenceModeFromAtomEntity(atomKPINodeEntity),
+				ComparedSDParameterSpecification: comparedSDParameterSpecificationFromAtomEntity(atomKPINodeEntity),
+				ComparedRecordOffset:             atomKPINodeEntity.ComparedRecordOffset,
+			}
+		case "numeric_exists":
+			return &sharedModel.NumericExistsAtomKPINode{
 				SDParameterSpecification: sdParameterDenotation,
-				ReferenceValue:           sharedUtils.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+			}
+		case "numeric_not_exists":
+			return &sharedModel.NumericNotExistsAtomKPINode{
+				SDParameterSpecification: sdParameterDenotation,
 			}
 		}
 	}
@@ -92,11 +182,16 @@ func ToDLLModelKPIDefinition(kpiDefinitionEntity dbModel.KPIDefinitionEntity, kp
 	kpiDefinitionRootOptional := sharedUtils.NewOptionalOf(reconstructKPINodeTree(*kpiDefinitionEntity.RootNodeID, prepareKPINodeParentChildrenMap(kpiNodeEntities), logicalOperationKPINodeEntities, atomKPINodeEntities))
 	return sharedModel.KPIDefinition{
 		ID:                  &kpiDefinitionEntity.ID,
+		UID:                 kpiDefinitionEntity.UID,
+		Label:               kpiDefinitionEntity.Label,
 		SDTypeID:            kpiDefinitionEntity.SDTypeID,
-		SDTypeSpecification: kpiDefinitionEntity.SDType.Denotation,
+		SDTypeSpecification: kpiDefinitionEntity.SDType.UID,
 		UserIdentifier:      kpiDefinitionEntity.UserIdentifier,
 		RootNode:            kpiDefinitionRootOptional.GetPayload(),
 		SDInstanceMode:      sharedModel.SDInstanceMode(kpiDefinitionEntity.SDInstanceMode),
+		SelectedSDInstanceIDs: sharedUtils.Map(kpiDefinitionEntity.SDInstanceKPIDefinitionRelationshipRecords, func(sdInstanceKPIDefinitionRelationshipEntity dbModel.SDInstanceKPIDefinitionRelationshipEntity) uint32 {
+			return sdInstanceKPIDefinitionRelationshipEntity.SDInstanceID
+		}),
 		SelectedSDInstanceUIDs: sharedUtils.Map(kpiDefinitionEntity.SDInstanceKPIDefinitionRelationshipRecords, func(sdInstanceKPIDefinitionRelationshipEntity dbModel.SDInstanceKPIDefinitionRelationshipEntity) string {
 			return sdInstanceKPIDefinitionRelationshipEntity.SDInstanceUID
 		}),

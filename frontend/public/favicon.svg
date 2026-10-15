@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="24.12059mm"
+   height="24.851519mm"
+   viewBox="0 0 24.12059 24.851519"
+   version="1.1"
+   id="svg1"
+   inkscape:export-filename="favicon.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm">
+    <inkscape:page
+       x="0"
+       y="0"
+       width="24.12059"
+       height="24.851519"
+       id="page2"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Vrstva 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-100,-100)">
+    <rect
+       style="fill:#102a43;fill-opacity:1;stroke-width:0.499999"
+       id="rect1"
+       width="24.12059"
+       height="24.851517"
+       x="100"
+       y="100"
+       ry="1.9491386" />
+    <text
+       xml:space="preserve"
+       style="font-size:23.6793px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:1.67805"
+       x="105.33104"
+       y="120.35429"
+       id="text1"
+       inkscape:transform-center-x="-19.008227"
+       inkscape:transform-center-y="4.8424224"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         style="fill:#ffffff;stroke-width:1.67807"
+         x="105.33104"
+         y="120.35429">R</tspan></text>
+  </g>
+</svg>

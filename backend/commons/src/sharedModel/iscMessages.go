@@ -1,27 +1,68 @@
+/**
+ * @file iscMessages.go
+ * @brief Sdílené datové zprávy používané pro interní komunikaci služeb platformy RIoT.
+ *
+ * @author Michal Bureš
+ * @author Vojtěch Hubáček
+ *
+ * @par Autorský podíl
+ * - Michal Bureš: původní modely interních zpráv pro základní tok systému.
+ * - Vojtěch Hubáček: doplnění zpráv pro časovou databázi, role parametrů typů zdrojů, reprocessing a tuple komunikaci a úprava části původních struktur.
+ *
+ * @ingroup riot_commons
+ */
 package sharedModel
 
-type KPIFulfillmentCheckResultTupleISCMessage []KPIFulfillmentCheckResultISCMessage
+import "time"
+
+type RawDataPointISCMessageTupleISCMessage []RawDataPointISCMessage
+type RawDataPointISCMessage struct {
+	SDTypeUID     string    `json:"sdTypeUID"`
+	SDInstanceUID string    `json:"sdInstanceUID"`
+	EventTime     time.Time `json:"eventTime"`
+	Payload       []byte    `json:"payload"`
+}
+
+type RawDataPointCacheBootstrapISCMessage struct {
+	Tuple []RawDataPointISCMessage `json:"tuple"`
+	Done  bool                     `json:"done"`
+}
+
+type KPIFulfillmentCheckRequestTupleISCMessage []KPIFulfillmentCheckRequestISCMessage
+
+type KPIFulfillmentCheckResultTupleISCMessage struct {
+	Tuple     []KPIFulfillmentCheckResultISCMessage `json:"tuple"`
+	Reprocess bool                                  `json:"reprocess"`
+}
 
 type KPIFulfillmentCheckResultISCMessage struct {
-	SDInstanceUID   string `json:"sdInstanceUID"`
-	KPIDefinitionID uint32 `json:"kpiDefinitionID"`
-	Fulfilled       bool   `json:"fulfilled"`
+	SDTypeUID        string    `json:"sdTypeUID"`
+	SDInstanceUID    string    `json:"sdInstanceUID"`
+	KPIDefinitionUID string    `json:"kpiDefinitionUID"`
+	EventTime        time.Time `json:"eventTime"`
+	Fulfilled        bool      `json:"fulfilled"`
+}
+
+type KPIFulfillmentCacheBootstrapISCMessage struct {
+	Tuple []KPIFulfillmentCheckResultISCMessage `json:"tuple"`
+	Done  bool                                  `json:"done"`
 }
 
 type KPIFulfillmentCheckRequestISCMessage struct {
-	Timestamp           float32 `json:"timestamp"`
-	SDInstanceUID       string  `json:"sdInstanceUID"`
-	SDTypeSpecification string  `json:"sdTypeSpecification"`
-	Parameters          any     `json:"parameters"`
+	EventTime     time.Time `json:"eventTime"`
+	SDInstanceUID string    `json:"sdInstanceUID"`
+	SDTypeUID     string    `json:"sdTypeUID"`
+	Parameters    any       `json:"parameters"`
 }
+
+type SDInstanceRegistrationRequestTupleISCMessage []SDInstanceRegistrationRequestISCMessage
 
 type SDInstanceRegistrationRequestISCMessage struct {
-	Timestamp           float32 `json:"timestamp"`
-	SDInstanceUID       string  `json:"sdInstanceUID"`
-	SDTypeSpecification string  `json:"sdTypeSpecification"`
+	EventTime     time.Time `json:"eventTime"`
+	Label         string    `json:"label"`
+	SDInstanceUID string    `json:"sdInstanceUID"`
+	SDTypeUID     string    `json:"sdTypeUID"`
 }
-
-type SDTypeConfigurationUpdateISCMessage []string
 
 type SDInstanceInfo struct {
 	SDInstanceUID   string `json:"sdInstanceUID"`
@@ -30,6 +71,63 @@ type SDInstanceInfo struct {
 
 type SDInstanceConfigurationUpdateISCMessage []SDInstanceInfo
 
-type KPIConfigurationUpdateISCMessage map[string][]KPIDefinition
+type KPIConfigurationUpdateISCMessage struct {
+	KpiConfiguration map[string][]KPIDefinitionMPU `json:"kpiConfiguration"`
+	JobID            string                        `json:"jobID"`
+}
 
 type MessageProcessingUnitConnectionNotification struct{}
+
+type SDTypeConfigurationUpdateISCMessage []SDTypeRegistrationRequestISCMessage
+type SDTypeRegistrationRequestTupleISCMessage []SDTypeRegistrationRequestISCMessage
+
+type SDTypeRegistrationRequestISCMessage struct {
+	SDTypeUID  string        `json:"sdTypeUID"`
+	Label      string        `json:"label"`
+	Parameters []SDParameter `json:"parameters"`
+}
+
+type SDTypeUpdateTupleISCMessage []SDTypeUpdateISCMessage
+
+type SDTypeUpdateISCMessage struct {
+	SDTypeUID  string        `json:"sdTypeUID"`
+	Label      string        `json:"label"`
+	Parameters []SDParameter `json:"parameters"`
+}
+
+type SDParameterType string
+
+const (
+	SDParameterTypeString  SDParameterType = "string"
+	SDParameterTypeBoolean SDParameterType = "boolean"
+	SDParameterTypeNumber  SDParameterType = "number"
+)
+
+type SDParameterRole string
+
+const (
+	SDParameterRoleField SDParameterRole = "field"
+	SDParameterRoleTag   SDParameterRole = "tag"
+)
+
+type SDParameter struct {
+	Denotation string          `json:"denotation"`
+	Type       SDParameterType `json:"type"`
+	Label      string          `json:"label"`
+	Role       SDParameterRole `json:"role"`
+}
+
+type KPIReprocessRequestISCMessage struct {
+	JobID            string    `json:"jobId"`
+	Wait             bool      `json:"wait"`
+	KPIDefinitionUID string    `json:"kpiDefinitionUID"`
+	SDTypeUID        string    `json:"sdTypeUID"`
+	SDInstanceUIDs   []string  `json:"sdInstanceUIDs,omitempty"`
+	To               time.Time `json:"to"`
+}
+
+type KPIDeleteResultsRequestISCMessage struct {
+	JobID            string `json:"jobId"`
+	SDTypeUID        string `json:"sdTypeUID"`
+	KPIDefinitionUID string `json:"kpiDefinitionUID"`
+}
